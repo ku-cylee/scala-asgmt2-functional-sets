@@ -1,4 +1,4 @@
-name := "PrjName"  //Edit Here
+name := "progfun"  //Edit Here
 
 version := "1.0.0"
 
