@@ -1,112 +1,95 @@
 package funsets
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import org.junit.runner.RunWith
-import org.scalatest.junit.JUnitRunner
+import org.scalatestplus.junit.JUnitRunner
 
-/**
- * This class is a test suite for the methods in object FunSets. To run
- * the test suite, you can either:
- *  - run the "test" command in the SBT console
- *  - right-click the file in eclipse and chose "Run As" - "JUnit Test"
- */
 @RunWith(classOf[JUnitRunner])
-class FunSetSuite extends FunSuite {
-
-
-  /**
-   * Link to the scaladoc - very clear and detailed tutorial of FunSuite
-   *
-   * http://doc.scalatest.org/1.9.1/index.html#org.scalatest.FunSuite
-   *
-   * Operators
-   *  - test
-   *  - ignore
-   *  - pending
-   */
-
-  /**
-   * Tests are written using the "test" operator and the "assert" method.
-   */
-  test("string take") {
-    val message = "hello, world"
-    assert(message.take(5) == "hello")
-  }
-
-  /**
-   * For ScalaTest tests, there exists a special equality operator "===" that
-   * can be used inside "assert". If the assertion fails, the two values will
-   * be printed in the error message. Otherwise, when using "==", the test
-   * error message will only say "assertion failed", without showing the values.
-   *
-   * Try it out! Change the values so that the assertion fails, and look at the
-   * error message.
-   */
-  test("adding ints") {
-    assert(1 + 2 === 3)
-  }
-
-  
+class FunSetSuite extends AnyFunSuite {  
   import FunSets._
 
-  test("contains is implemented") {
+  test("Contains Test") {
     assert(contains(x => true, 100))
   }
-  
-  /**
-   * When writing tests, one would often like to re-use certain values for multiple
-   * tests. For instance, we would like to create an Int-set and have multiple test
-   * about it.
-   * 
-   * Instead of copy-pasting the code for creating the set into every test, we can
-   * store it in the test class using a val:
-   * 
-   *   val s1 = singletonSet(1)
-   * 
-   * However, what happens if the method "singletonSet" has a bug and crashes? Then
-   * the test methods are not even executed, because creating an instance of the
-   * test class fails!
-   * 
-   * Therefore, we put the shared values into a separate trait (traits are like
-   * abstract classes), and create an instance inside each test method.
-   * 
-   */
 
   trait TestSets {
     val s1 = singletonSet(1)
     val s2 = singletonSet(2)
     val s3 = singletonSet(3)
+    def mul4(x: Int): Boolean = x % 4 == 0
+    def mul6(x: Int): Boolean = x % 6 == 0
   }
 
-  /**
-   * This test is currently disabled (by using "ignore") because the method
-   * "singletonSet" is not yet implemented and the test would fail.
-   * 
-   * Once you finish your implementation of "singletonSet", exchange the
-   * function "ignore" by "test".
-   */
-  ignore("singletonSet(1) contains 1") {
-    
-    /**
-     * We create a new instance of the "TestSets" trait, this gives us access
-     * to the values "s1" to "s3". 
-     */
+  test("Singleton Test") {
     new TestSets {
-      /**
-       * The string argument of "assert" is a message that is printed in case
-       * the test fails. This helps identifying which assertion failed.
-       */
-      assert(contains(s1, 1), "Singleton")
+      assert(contains(s1, 1), "singleton s1 contains 1")
+      assert(!contains(s2, 1), "singleton s2 not contains 2")
     }
   }
 
-  ignore("union contains all elements") {
+  test("Union Test") {
     new TestSets {
-      val s = union(s1, s2)
-      assert(contains(s, 1), "Union 1")
-      assert(contains(s, 2), "Union 2")
-      assert(!contains(s, 3), "Union 3")
+      val unionS1S2 = union(s1, s2)
+      val unionMul4Mul6 = union(mul4, mul6)
+      assert(contains(unionS1S2, 1), "s1 union s2 contains 1")
+      assert(!contains(unionS1S2, 3), "s1 union s2 not contains 3")
+      assert(contains(unionMul4Mul6, 16), "mul4 union mul6 contains 16")
+      assert(!contains(unionMul4Mul6, 13), "mul4 union mul6 not contains 13")
+    }
+  }
+
+  test("Intersect Test") {
+    new TestSets {
+      val intMul4Mul6 = intersect(mul4, mul6)
+      assert(contains(intMul4Mul6, -12), "s1 intersect s2 contains -12")
+      assert(!contains(intMul4Mul6, 16), "s1 intersect s2 not contains 16")
+    }
+  }
+
+  test("Diff Test") {
+    new TestSets {
+      val diffMult4Mul6 = diff(mul4, mul6)
+      assert(contains(diffMult4Mul6, 4), "s1 diff s2 contains 4")
+      assert(!contains(diffMult4Mul6, 6), "s1 diff s2 not contains 6")
+    }
+  }
+
+  test("Filter Test") {
+    new TestSets {
+      val bigMul4 = filter(mul4, x => x > 100)
+      assert(contains(bigMul4, 104), "mul4 and x > 100 contains 104")
+      assert(!contains(bigMul4, 102), "mul4 and x > 100 not contains 102")
+      assert(!contains(bigMul4, 96), "mul4 and x > 100 not contains 96")
+    }
+  }
+
+  test("Forall Test") {
+    new TestSets {
+      val intMul4Mul6 = intersect(mul4, mul6)
+      def isMul12(x: Int) = x % 12 == 0
+      def isMul24(x: Int) = x % 24 == 0
+      assert(forall(intMul4Mul6, isMul12), "mul4 intersect mul6 all satisfy isMul12")
+      assert(!forall(intMul4Mul6, isMul24), "mul4 intersect mul6 not all satisfy isMul24")
+    }
+  }
+
+  test("Exists Test") {
+    new TestSets {
+      val intMul4Mul6 = intersect(mul4, mul6)
+      def isMul3(x: Int) = x % 3 == 0
+      def isMul12Plus1(x: Int) = x % 12 == 1
+      assert(exists(intMul4Mul6, isMul3), "mul4 intersect mul6 exists isMul3")
+      assert(!exists(intMul4Mul6, isMul12Plus1), "mul4 intersect mul6 not exists isMul12Plus1")
+    }
+  }
+
+  test("Map Test") {
+    new TestSets {
+      def doubleInt(x: Int) = 2 * x
+      val mul8 = map(mul4, doubleInt)
+      assert(forall(mul8, x => x % 8 == 0), "mul4 map doubleInt is mul8")
+      assert(!contains(mul8, 4), "mul4 map doubleInt not contains 4")
     }
   }
 }
